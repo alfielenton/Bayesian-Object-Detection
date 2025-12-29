@@ -15,7 +15,7 @@ with open("dataset//data.yaml", 'r') as f:
 
         if start_noting_categories:
             ind = line.find(":")
-            categories.append(line[ind+1:-1])
+            categories.append(line[ind+2:-1])
 categories[-1] += 'a'
 print('Obtained categories\n')
 
