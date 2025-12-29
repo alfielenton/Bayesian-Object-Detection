@@ -1,4 +1,5 @@
 import os
+import json
 import cv2
 import numpy as np
 
@@ -39,10 +40,12 @@ for name in folder_names:
     images[name] = {}
     for image_name in image_filenames[name]:
         im = get_image('dataset//' + name + '//images//' + image_name)
-        images[name][image_name[:-4]] = (im, im.shape)
+        images[name][image_name[:-4]] = (im.tolist(), im.shape)
 
     labels[name] = {}
     for label_name in label_filenames[name]:
         la = get_labels('dataset//' + name + '//labels//' + label_name)
         labels[name][label_name[:-4]] = la
 
+with open('data-handling-results//mapping.json','w') as f:
+    json.dump({'images':images, 'labels':labels}, f)
