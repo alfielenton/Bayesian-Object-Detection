@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 folder_names = ['train', 'valid', 'test']
 filenames = {}
@@ -49,19 +50,20 @@ def get_image(id):
     return cv2.imread(file_path)
 
 print('\nCollecting data measurements...\n')
-image_dimensions = {}
 
-for name in folder_names:
+_, axs = plt.subplots(3, 1, figsize=(10, 10))
+
+for i, name in enumerate(folder_names):
     im_dims = []
     animal_classes = []
 
     print(f'\tCollecting {name} measurements...')
-    for i, id in enumerate(filenames[name]):
+    for j, id in enumerate(filenames[name]):
         
         im_dims.append(get_image(id).shape)
         animal_classes.append(int(get_labels(id)[0]))
-        if (i + 1) % 100 == 0:
-            print(f'\t\t{i+1}/{len(filenames[name])} measured')
+        if (j + 1) % 100 == 0:
+            print(f'\t\t{j + 1}/{len(filenames[name])} measured')
 
     animal_classes = np.array(animal_classes)
     im_dims = np.array(im_dims).mean(axis=0).tolist()
@@ -70,10 +72,19 @@ for name in folder_names:
     with open(measurement_file, "w") as f:
         f.write(f"Average Image Dimension: {im_dims}\n\n")
 
-        unique, counts = np.unique(animal_classes, return_counts=True)
+        unique, count = np.unique(animal_classes, return_counts=True)
         f.write("Class counts:\n")
-        for u, c in zip(unique, counts):
+        for u, c in zip(unique, count):
             f.write(f"{u} : {c}\n")
+
+    axs[i].bar(unique, count)
+    axs[i].set_xlabel('Category')
+    axs[i].set_ylabel('Number')
+    axs[i].set_title(f'Counts in {name} data')
 
     print("\n\tWritten results to " + measurement_file)
     print('\n')
+
+plt.savefig('dataset//category-counts.png')
+print('Saved Bar Graph in dataset folder')
+plt.close()
