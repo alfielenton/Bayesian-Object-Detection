@@ -3,8 +3,22 @@ import json
 import cv2
 import numpy as np
 
-def get_labels(file_path):
+folder_names = ['train', 'valid', 'test']
 
+image_filenames = {}
+label_filenames = {}
+
+print('Collecting file names...')
+for name in folder_names:
+    print(f'\t{name}')
+    image_filenames[name] = os.listdir('dataset//' + name + '//images')
+    label_filenames[name] = os.listdir('dataset//' + name + '//labels')
+    print(f'\t\t# image names: {len(image_filenames[name])}')
+    print(f'\t\t# label names: {len(label_filenames[name])}\n')
+
+def get_labels(name, id):
+
+    file_path = 'datset//' + name + '//labels//' + id + '.txt'
     with open(file_path, 'r') as f:
         line = f.readline()[:-1]
 
@@ -19,33 +33,7 @@ def get_labels(file_path):
     values = [float(v) for v in values]
     return values
 
-def get_image(file_path):
+def get_image(name, id):
+    file_path = 'dataset//' + name + '//images//' + id + '.jpg'
     return cv2.imread(file_path)
 
-
-folder_names = ['train', 'valid', 'test']
-
-image_filenames = {}
-label_filenames = {}
-
-for name in folder_names:
-    image_filenames[name] = os.listdir('dataset//' + name + '//images')
-    label_filenames[name] = os.listdir('dataset//' + name + '//labels')
-
-images = {}
-labels = {}
-
-for name in folder_names:
-
-    images[name] = {}
-    for image_name in image_filenames[name]:
-        im = get_image('dataset//' + name + '//images//' + image_name)
-        images[name][image_name[:-4]] = (im.tolist(), im.shape)
-
-    labels[name] = {}
-    for label_name in label_filenames[name]:
-        la = get_labels('dataset//' + name + '//labels//' + label_name)
-        labels[name][label_name[:-4]] = la
-
-with open('data-handling-results//mapping.json','w') as f:
-    json.dump({'images':images, 'labels':labels}, f)
