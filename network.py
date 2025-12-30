@@ -3,7 +3,7 @@ from torch import nn
 class CNNhead(nn.Module):
 
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
         self.cnn_head = nn.Sequential(nn.Conv2d(in_channels = 3, out_channels = 64, kernel_size = 10, stride = 2),
                                       nn.ReLU(), 
