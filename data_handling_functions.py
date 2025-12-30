@@ -62,5 +62,3 @@ def plot_bounding_box(id):
     
     plt.title('Animal: ' + categ)
     plt.show()
-
-plot_bounding_box(random.choice(filenames['train']))

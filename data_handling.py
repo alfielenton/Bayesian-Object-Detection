@@ -3,6 +3,7 @@ import cv2
 import json
 import numpy as np
 from matplotlib import pyplot as plt
+from plotting_boxes import get_image, get_labels
 
 categories = []
 start_noting_categories = False
@@ -41,35 +42,6 @@ for name in folder_names:
 with open('dataset//ids.json', 'w') as f:
     json.dump(filenames, f)
 
-def get_labels(id):
-
-    for name in filenames.keys():
-        if id in filenames[name]:
-            break
-    
-    file_path = 'dataset//' + name + '//labels//' + id + '.txt'
-    with open(file_path, 'r') as f:
-        line = f.readline()[:-1]
-
-    line += ' '
-    values = []
-    i_start = 0
-    for i, n in enumerate(line):
-        if n == ' ':
-            values.append(line[i_start:i])
-            i_start = i
-
-    values = [float(v) if i > 0 else int(v) for i, v in enumerate(values) ]
-    return values
-
-def get_image(id):
-
-    for name in filenames.keys():
-        if id in filenames[name]:
-            break
-
-    file_path = 'dataset//' + name + '//images//' + id + '.jpg'
-    return cv2.imread(file_path)
 
 print('\nCollecting data measurements...\n')
 
