@@ -63,5 +63,5 @@ def plot_bounding_box(id, resize = None):
                [centre_x - .5 * box_x] * 2, 
                [centre_x + .5 * box_x] * 2, color='red')
     
-    plt.title('Animal: ' + categ)
+    plt.title('Animal: ' + categ if resize is None else 'Animal: ' + categ +'. Resized')
     plt.show()
