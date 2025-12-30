@@ -59,7 +59,7 @@ def get_labels(id):
             values.append(line[i_start:i])
             i_start = i
 
-    values = [float(v) for v in values]
+    values = [float(v) if i > 0 else int(v) for i, v in enumerate(values) ]
     return values
 
 def get_image(id):
