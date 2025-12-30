@@ -35,6 +35,9 @@ for name in folder_names:
 
     filenames[name] = image_filenames
 
+with open('dataset//ids.json', 'w') as f:
+    json.dump(filenames, f)
+
 def get_labels(id):
 
     for name in filenames.keys():
