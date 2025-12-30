@@ -19,6 +19,9 @@ with open("dataset//data.yaml", 'r') as f:
 categories[-1] += 'a'
 print('Obtained categories\n')
 
+with open('dataset//categories.json', 'w') as f:
+    json.dump({'categories':categories}, f)
+
 folder_names = ['train', 'valid', 'test']
 filenames = {}
 
