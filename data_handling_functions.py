@@ -37,7 +37,7 @@ def get_labels(id):
             i_start = i
 
     values = [float(v) if i > 0 else int(v) for i, v in enumerate(values) ]
-    return values
+    return values[0], values[1:]
 
 def plot_bounding_box(id, resize = None):
 
@@ -65,3 +65,4 @@ def plot_bounding_box(id, resize = None):
     
     plt.title('Animal: ' + categ if resize is None else 'Animal: ' + categ +'. Resized')
     plt.show()
+
