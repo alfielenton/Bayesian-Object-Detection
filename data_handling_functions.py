@@ -1,4 +1,4 @@
-import random
+import torch
 import json
 import cv2
 from matplotlib import pyplot as plt
@@ -38,6 +38,27 @@ def get_labels(id):
 
     values = [float(v) if i > 0 else int(v) for i, v in enumerate(values) ]
     return values[0], values[1:]
+
+def generate_batch(ids, resize = (800, 800)):
+
+    x_batch = []
+    y_cl_batch = []
+    y_re_batch = []
+
+    for id in ids:
+        image = cv2.resize(get_image(id), resize) / 255.
+        image = image.transpose(2, 0, 1)
+        cl, re = get_labels(id)
+
+        x_batch.append(image)
+        y_cl_batch.append(cl)
+        y_re_batch.append(re)
+
+    x_batch = torch.tensor(x_batch, dtype=torch.float32)
+    y_cl_batch = torch.tensor(y_cl_batch, dtype=torch.long)
+    y_re_batch = torch.tensor(y_re_batch, dtype=torch.float32)
+
+    return x_batch, y_cl_batch, y_re_batch
 
 def plot_bounding_box(id, resize = None):
 
