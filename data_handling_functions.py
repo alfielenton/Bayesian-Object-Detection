@@ -39,10 +39,13 @@ def get_labels(id):
     values = [float(v) if i > 0 else int(v) for i, v in enumerate(values) ]
     return values
 
-def plot_bounding_box(id):
+def plot_bounding_box(id, resize = None):
 
     image = get_image(id)
     label = get_labels(id)
+
+    if resize is not None:
+        image = cv2.resize(image, resize)
 
     im_h, im_w, _ = image.shape
     categ = categories[label[0]]
