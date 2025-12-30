@@ -25,14 +25,14 @@ class CNNhead(nn.Module):
         self.cnn_regression_pool = nn.MaxPool2d(kernel_size = 2, stride = 2)
         
 
-        self.ffn_classification_tail = nn.Sequential(nn.Linear(in_features = 11 * 11 * 64, out_features = 2048),
+        self.ffn_classification_tail = nn.Sequential(nn.Linear(in_features = 12 * 12 * 64, out_features = 2048),
                                                      nn.ReLU(), 
                                                      nn.Linear(in_features = 2048, out_features = 1024),
                                                      nn.ReLU(),
                                                      nn.Linear(in_features = 1024, out_features = 512), 
                                                      nn.Tanh())
         
-        self.ffn_regression_tail = nn.Sequential(nn.Linear(in_features = 11 * 11 * 64, out_features = 2048),
+        self.ffn_regression_tail = nn.Sequential(nn.Linear(in_features = 12 * 12 * 64, out_features = 2048),
                                                      nn.ReLU(), 
                                                      nn.Linear(in_features = 2048, out_features = 1024),
                                                      nn.ReLU(),
@@ -49,7 +49,13 @@ class CNNhead(nn.Module):
         im_class2 = self.cnn_classification_tail2(im_class1)
         im_reg2 = self.cnn_regression_tail2(im_reg1)
 
-        im_class_feature = self.ffn_classification_tail(self.cnn_classification_pool(im_class2))
-        im_reg_feature = self.ffn_regression_tail(self.cnn_regression_pool(im_reg2))
+        im_class_pool = self.cnn_classification_pool(im_class2)
+        im_reg_pool = self.cnn_regression_pool(im_reg2)
+
+        im_class_pool = im_class_pool.view(-1, 12 * 12 * 64)
+        im_reg_pool = im_reg_pool.view(-1, 12 * 12 * 64)
+
+        im_class_feature = self.ffn_classification_tail(im_class_pool)
+        im_reg_feature = self.ffn_regression_tail(im_reg_pool)
 
         return im_class_feature, im_reg_feature
