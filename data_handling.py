@@ -3,7 +3,7 @@ import cv2
 import json
 import numpy as np
 from matplotlib import pyplot as plt
-from plotting_boxes import get_image, get_labels
+from data_handling_functions import get_image, get_labels
 
 categories = []
 start_noting_categories = False
