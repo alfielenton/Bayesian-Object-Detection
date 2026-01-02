@@ -65,14 +65,83 @@ class CNNhead(nn.Module):
 
 class BayesClassifier:
 
-    def __init__(self, n_feats, n_cats, Mu_scale, log_Sig_scale):
+    def __init__(self, n_feats, n_cats, sig_Mu, sig_Sig, lr):
 
-        self.n_cats = n_cats
-        self.n_feats = n_feats
-        self.Mu_scale = Mu_scale
-        self.log_Sig_scale = log_Sig_scale
+        self.lr = lr
 
-        self.log_Sig = torch.tensor(np.random.rand(self.n_feats, self.n_cats))
-        self.Sig = torch.exp(self.log_Sig)
-        self.Mu = torch.tensor(np.random.rand(self.n_feats, self.n_cats))
+        self.C = n_cats
+        self.N = n_feats
+
+        self.sig_Mu = sig_Mu
+        self.sig_Sig = sig_Sig
+
+        self.log_nu_Sig = torch.tensor(np.random.rand())
+        self.log_nu_Mu = torch.tensor(np.random.rand())
+
+        self.lambda_Sig = torch.tensor(np.random.rand(self.N, self.C))
+        self.lambda_Mu = torch.tensor(np.random.rand(self.N, self.C)) * self.sig_Mu
+
+    def predict_Mu_Sig(self):
+        nu_Sig = torch.exp(self.log_nu_Sig)
+        return self.lambda_Mu, torch.exp(self.lambda_Sig + (nu_Sig**2)/2)
+    
+    def direction_lambda_Mu(self, batch):
+
+        fts, cs = batch
+        nu_Sig = torch.exp(self.log_nu_Sig)
+        alpha = torch.exp(-self.lambda_Sig + (nu_Sig**2)/2)
+
+        mult = torch.zeros_like(self.lambda_Mu)
+        mult.index_add_(1, cs, (fts.T - self.lambda_Mu[:, cs]))
+
+        return alpha * mult - self.lambda_Mu / (self.sig_Mu ** 2)
+    
+    def direction_lambda_Sig(self, batch):
+
+        fts, cs = batch
+        nu_Sig = torch.exp(self.log_nu_Sig)
+        alpha = torch.exp(-self.lambda_Sig + (nu_Sig**2)/2)
+
+        nu_Mu = torch.exp(self.log_nu_Mu)
+
+        mult = torch.zeros_like(self.lambda_Sig)
+        mult.index_add_(1, cs, (1 - ((fts.T - self.lambda_Mu[:, cs]) ** 2 + nu_Mu ** 2) * alpha[:, cs]))
+        return -.5 * mult - self.lambda_Sig / (self.sig_Sig ** 2) - 2
+    
+    def direction_log_nu_Mu(self, batch):
+
+        fts, cs = batch
+        nu_Sig = torch.exp(self.log_nu_Sig)
+        alpha = torch.exp(-self.lambda_Sig + (nu_Sig**2)/2)
+
+        nu_Mu = torch.exp(self.log_nu_Mu)
+
+        grad = -nu_Mu * alpha[:, cs].sum() - (self.N * self.C * nu_Mu) / (self.sig_Mu ** 2) - (self.N * self.C) / nu_Mu
+        return nu_Mu * grad
+    
+    def direction_log_nu_Sig(self, batch):
+
+        fts, cs = batch
+        nu_Sig = torch.exp(self.log_nu_Sig)
+        alpha = torch.exp(-self.lambda_Sig + (nu_Sig**2)/2)
+
+        nu_Mu = torch.exp(self.log_nu_Mu)
+
+        grad = -.5 * nu_Sig * (((fts.T - self.lambda_Mu[:, cs]) ** 2 + nu_Mu ** 2) * alpha[:, cs]).sum() - self.N * self.C * nu_Sig/(self.sig_Sig ** 2) - self.N * self.C / nu_Sig
+        return nu_Sig * grad
+    
+    def parameters_step(self, batch):
+
+        self.lambda_Mu = self.lambda_Mu + self.lr * self.direction_lambda_Mu(batch)
+        self.lambda_Sig = self.lambda_Sig + self.lr * self.direction_lambda_Sig(batch)
+        self.log_nu_Mu = self.log_nu_Mu + self.lr * self.direction_log_nu_Mu(batch)
+        self.log_nu_Sig = self.log_nu_Sig + self.lr * self.direction_log_nu_Sig(batch)
+
+    def predict_cats(self, xs):
+
+        Mu, Sig = self.predict_Mu_Sig()
+        log_p = -.5 * self.N * torch.log(2 * torch.pi) -.5 * torch.log(Sig).sum(dim=0) \
+                -.5 * ((xs[..., None] - Mu) * (1/Sig) * (xs[..., None] - Mu)).sum(dim=1)
         
+        log_p = log_p - torch.log(torch.exp(log_p).sum(dim=1))
+        return log_p.argmax(dim=1)
