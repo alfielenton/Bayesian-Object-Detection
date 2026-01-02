@@ -1,4 +1,6 @@
+import torch
 from torch import nn
+import numpy as np
 
 class CNNhead(nn.Module):
 
@@ -59,3 +61,18 @@ class CNNhead(nn.Module):
         im_reg_feature = self.ffn_regression_tail(im_reg_pool)
 
         return im_class_feature, im_reg_feature
+    
+
+class BayesClassifier:
+
+    def __init__(self, n_feats, n_cats, Mu_scale, log_Sig_scale):
+
+        self.n_cats = n_cats
+        self.n_feats = n_feats
+        self.Mu_scale = Mu_scale
+        self.log_Sig_scale = log_Sig_scale
+
+        self.log_Sig = torch.tensor(np.random.rand(self.n_feats, self.n_cats))
+        self.Sig = torch.exp(self.log_Sig)
+        self.Mu = torch.tensor(np.random.rand(self.n_feats, self.n_cats))
+        
