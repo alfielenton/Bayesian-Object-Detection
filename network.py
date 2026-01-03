@@ -144,7 +144,8 @@ class BayesClassifier:
         log_p = -.5 * self.N * torch.log(torch.tensor(2 * torch.pi)) -.5 * torch.log(Sig).sum(dim=0) \
                 -.5 * ((xs[..., None] - Mu) * (1/Sig) * (xs[..., None] - Mu)).sum(dim=1)
     
-        log_p = log_p - torch.log(torch.exp(log_p).sum(dim=1, keepdim=True))
+        log_p = log_p - torch.logsumexp(log_p, dim = 1, keepdim = True)
+
         return log_p
     
 class BayesRegresser:
