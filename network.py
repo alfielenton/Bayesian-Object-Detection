@@ -141,10 +141,10 @@ class BayesClassifier:
     def predict_cats(self, xs):
 
         Mu, Sig = self.predict_Mu_Sig()
-        log_p = -.5 * self.N * torch.log(2 * torch.pi) -.5 * torch.log(Sig).sum(dim=0) \
+        log_p = -.5 * self.N * torch.log(torch.tensor(2 * torch.pi)) -.5 * torch.log(Sig).sum(dim=0) \
                 -.5 * ((xs[..., None] - Mu) * (1/Sig) * (xs[..., None] - Mu)).sum(dim=1)
-        
-        log_p = log_p - torch.log(torch.exp(log_p).sum(dim=1))
+    
+        log_p = log_p - torch.log(torch.exp(log_p).sum(dim=1, keepdim=True))
         return log_p
     
 class BayesRegresser:
