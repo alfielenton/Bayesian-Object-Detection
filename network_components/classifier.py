@@ -80,7 +80,7 @@ class BayesClassifier:
 
         Mu, Sig = self.predict_Mu_Sig()
         log_p = -.5 * self.N * torch.log(torch.tensor(2 * torch.pi)) -.5 * torch.log(Sig).sum(dim=0) \
-                -.5 * ((xs[..., None] - Mu) * (1/Sig) * (xs[..., None] - Mu)).sum(dim=1)
+                -.5 * ((xs[..., None] - Mu) ** 2 * (1/Sig)).sum(dim=1)
     
         log_p = log_p - torch.logsumexp(log_p, dim = 1, keepdim = True)
 

@@ -1,5 +1,6 @@
 import torch
 import json
+import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
@@ -54,9 +55,9 @@ def generate_batch(ids, resize = (800, 800)):
         y_cl_batch.append(cl)
         y_re_batch.append(re)
 
-    x_batch = torch.tensor(x_batch, dtype=torch.float32)
-    y_cl_batch = torch.tensor(y_cl_batch, dtype=torch.long)
-    y_re_batch = torch.tensor(y_re_batch, dtype=torch.float32)
+    x_batch = torch.tensor(np.array(x_batch), dtype=torch.float32)
+    y_cl_batch = torch.tensor(np.array(y_cl_batch), dtype=torch.long)
+    y_re_batch = torch.tensor(np.array(y_re_batch), dtype=torch.float32)
 
     return x_batch, y_cl_batch, y_re_batch
 
