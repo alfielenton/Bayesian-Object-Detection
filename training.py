@@ -35,17 +35,20 @@ print('Getting models...')
 net = network.CNNhead().to(opt.device)
 net_optim = optim.Adam(net.parameters(), opt.lr_n, weight_decay = 1e-8)
 bc = classifier.BayesClassifier(opt.device, opt.feat_dim, opt.n_cats, opt.sig_Mu_c, opt.sig_Sig_c, opt.lr_c)
-br = regresser.BayesRegresser(opt.device, opt.feat_dim, opt.box_dim, opt.sig_W_r, opt.sig_y_r, opt.lr_r)
+br = regresser.BayesRegresser(opt.device, opt.feat_dim, opt.box_dim, opt.sig_W_r, opt.sig_y_r)
 print('Models obtained\n')
 
-print('Starting training...')
+print('Starting training...\n')
 net.train()
 n_epochs = opt.n_epochs
 
 for epoch in range(n_epochs):
 
+    print(f'\tEpoch {epoch + 1}:\n')
+    n_its = 0
     for ids in train_dl:
 
+        n_its += 1
         x_batch, y_c, y_r = data_handling_functions.generate_batch(ids)
         x_batch, y_c, y_r = x_batch.to(opt.device), y_c.to(opt.device), y_r.to(opt.device)
 
@@ -69,4 +72,6 @@ for epoch in range(n_epochs):
             bc.parameters_step((c_feat, y_c))
             br.parameters_step((r_feat, y_r))
 
-    print(f'{epoch + 1}/{n_epochs} completed')
+        print(f'\t\tIteration {n_its} completed')
+
+    print(f'\t{epoch + 1}/{n_epochs} completed')

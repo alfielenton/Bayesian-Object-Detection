@@ -3,14 +3,13 @@ import numpy as np
     
 class BayesRegresser:
 
-    def __init__(self, device, n_feats, n_labels, sig_W, sig_y, lr):
+    def __init__(self, device, n_feats, n_labels, sig_W, sig_y):
 
         self.device = device
         self.N = n_feats
         self.M = n_labels
         self.sig_W = sig_W
         self.sig_y = sig_y
-        self.lr = lr
 
         self.Mu_W = torch.zeros(self.M, self.N, dtype = torch.float32, device = self.device)
         self.inv_Sig_W = ((1/self.sig_W ** 2) * torch.eye(self.N, dtype = torch.float32, device = self.device)).expand(self.M, self.N, self.N)
