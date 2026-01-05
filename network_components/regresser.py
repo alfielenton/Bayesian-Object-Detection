@@ -3,16 +3,18 @@ import numpy as np
     
 class BayesRegresser:
 
-    def __init__(self, device, n_feats, n_labels, sig_W, sig_y):
+    def __init__(self, device, n_feats, n_labels, sig_wc, sig_y):
 
         self.device = device
         self.N = n_feats
         self.M = n_labels
-        self.sig_W = sig_W
+        self.sig_wc = sig_wc
         self.sig_y = sig_y
 
-        self.Mu_W = torch.zeros(self.M, self.N, dtype = torch.float32, device = self.device)
-        self.inv_Sig_W = ((1/self.sig_W ** 2) * torch.eye(self.N, dtype = torch.float32, device = self.device)).expand(self.M, self.N, self.N)
+        self.Mu_w = torch.zeros(self.M, self.N, dtype=torch.float32, device=self.device)
+        self.inv_Sig_wc = (1 / self.sig_wc ** 2) * torch.eye(self.N, dtype=torch.float32, device=self.device)
+        self.Sig_y = (self.sig_y ** 2) * torch.eye(self.M, device=self.device, dtype=torch.float32)
+
     
     def parameters_step(self, batch):
         X, Y = batch
@@ -20,29 +22,14 @@ class BayesRegresser:
         XtX = X.T @ X           
         YtX = Y.T @ X          
 
-        inv_Sig_W_prior = self.inv_Sig_W
-
-        inv_Sig_W_post = inv_Sig_W_prior + (1 / self.sig_y ** 2) * XtX
-        inv_Sig_W_post = 0.5 * (inv_Sig_W_post + torch.transpose(inv_Sig_W_post, 1, 2))
-
-        rhs = (inv_Sig_W_prior * self.Mu_W[:, None, :]).sum(dim=1) + (1 / self.sig_y ** 2) * YtX
-
-        self.Mu_W = torch.linalg.solve(inv_Sig_W_post, rhs[..., None]).squeeze(-1)
-        self.inv_Sig_W = inv_Sig_W_post
-
+        inv_Sig_wc = self.inv_Sig_wc
+        self.inv_Sig_wc = self.inv_Sig_wc + XtX
+        self.Mu_w = (self.Mu_w @ inv_Sig_wc + YtX) @ torch.linalg.inv(self.inv_Sig_wc)
 
     def predict_boxes(self, X):
 
-        mu_y = (self.Mu_W @ X.T).T 
-
-        X_exp = X.T.unsqueeze(0).expand(self.M, -1, -1)
-
-        tmp = torch.linalg.solve(self.inv_Sig_W, X_exp)
-        quad = (X_exp * tmp).sum(dim=1)
-
-        var_y = self.sig_y ** 2 * (1 + quad.T)
-
-        I = torch.eye(self.M, device=self.device).expand(X.size(0), self.M, self.M)
-        sig_y = var_y[:, None, :] * I
+        mu_y = (self.Mu_w @ X.T).T 
+        sig_y = 1 + (X * torch.linalg.solve(self.inv_Sig_wc, X.T).T).sum(dim=1)
+        sig_y = sig_y[:, None, None] * self.Sig_y
 
         return mu_y, sig_y

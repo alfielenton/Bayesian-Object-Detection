@@ -28,8 +28,15 @@ class ProgressTracker:
         self.current_r_loss.append(float(r_loss))
         self.current_total_loss.append(float(loss))
 
-        if self.iter_count % 10 == 0:
-            print(f'\t\t{self.iter_count} iterations completed') 
+        if self.iter_count % 1 == 0:
+            t = time.time() - self.epoch_timer
+            h, m, s = convert_time(t)
+            p = f'\t\t{self.iter_count} iterations | '
+            p += f'Last classification loss {c_loss:.3f} | '
+            p += f'Last regression loss {r_loss:.3f} | '
+            p += f'Last total loss {loss:.3f} | '
+            p += f'Epoch time {h}H {m}M {s}S'
+            print(p)  
 
     def start_timer(self):
         self.timer = time.time()

@@ -59,11 +59,14 @@ for epoch in range(n_epochs):
         c_feat, r_feat = net(x_batch)
 
         c_preds = bc.predict_cats(c_feat)
-        r_preds, _ = br.predict_boxes(r_feat)
+        r_preds_mu, r_preds_sig = br.predict_boxes(r_feat)
 
         c_loss = -c_preds[torch.arange(y_c.size(0), device = opt.device), y_c].sum()
-        r_loss = ((y_r - r_preds)**2).sum(dim = 1)
-        r_loss = r_loss.mean()
+
+        var = torch.diagonal(r_preds_sig, dim1=1, dim2=2)
+        r_loss = .5 * torch.log(var).sum(dim=1) \
+                 +.5 * ((y_r - r_preds_mu) / var).sum(dim=1)
+        r_loss = r_loss.sum()
 
         net_optim.zero_grad()
 
