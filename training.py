@@ -4,6 +4,7 @@ from torch import optim
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from parameters import Parameters
+from stats_collector import ProgressTracker
 from network_components import classifier, regresser, network
 from data_handlings import data_handling_functions
 
@@ -38,17 +39,20 @@ bc = classifier.BayesClassifier(opt.device, opt.feat_dim, opt.n_cats, opt.sig_Mu
 br = regresser.BayesRegresser(opt.device, opt.feat_dim, opt.box_dim, opt.sig_W_r, opt.sig_y_r)
 print('Models obtained\n')
 
+print('Getting progress tracker...')
+pt = ProgressTracker()
+pt.start_timer()
+print('Progress tracker obtained and timer started')
+
 print('Starting training...\n')
 net.train()
 n_epochs = opt.n_epochs
 
 for epoch in range(n_epochs):
 
-    print(f'\tEpoch {epoch + 1}:\n')
-    n_its = 0
+    pt.start_epoch()
     for ids in train_dl:
 
-        n_its += 1
         x_batch, y_c, y_r = data_handling_functions.generate_batch(ids)
         x_batch, y_c, y_r = x_batch.to(opt.device), y_c.to(opt.device), y_r.to(opt.device)
 
@@ -68,10 +72,9 @@ for epoch in range(n_epochs):
 
         net_optim.step()
 
+        pt.record_losses(c_loss.detach(), r_loss.detach(), loss.detach())
         with torch.no_grad():
             bc.parameters_step((c_feat, y_c))
             br.parameters_step((r_feat, y_r))
 
-        print(f'\t\tIteration {n_its} completed')
-
-    print(f'\t{epoch + 1}/{n_epochs} completed')
+    pt.end_epoch()
