@@ -1,4 +1,5 @@
 import time
+import json
 
 def convert_time(t):
     t = int(t)
@@ -17,9 +18,14 @@ class ProgressTracker:
         self.current_r_loss = []
         self.current_total_loss = []
 
-        self.epochs_c_loss = []
-        self.epochs_r_loss = []
-        self.eochs_total_loss = []
+        self.loss_parts = ['class', 'regression', 'total']
+        self.loss_types = ['average', 'total']
+
+        for t in self.loss_types:
+            for p in self.loss_parts:
+                path = "results//" + t + "//" + p + ".csv"
+                with open(path, "w") as f:
+                    f.write('')
 
     def record_losses(self, c_loss, r_loss, loss):
         self.iter_count += 1
@@ -58,6 +64,20 @@ class ProgressTracker:
         avg_c_loss = sum(self.current_c_loss) / len(self.current_c_loss)
         avg_r_loss = sum(self.current_r_loss) / len(self.current_r_loss)
         avg_total_loss = sum(self.current_total_loss) / len(self.current_total_loss)
+
+        avg_losses = [avg_c_loss, avg_r_loss, avg_total_loss]
+        current_losses = [self.current_c_loss, self.current_r_loss, self.current_total_loss]
+
+        for t in self.loss_types:
+            for i_p, p in enumerate(self.loss_parts):
+                path = "results//" + t + "//" + p + ".csv"
+                if t == 'average':
+                    with open(path, "a") as f:
+                        f.write(str(avg_losses[i_p]) + ',')
+                else:
+                    with open(path, "a") as f:
+                        f.write(",".join([str(l) for l in current_losses[i_p]]) + '\n')
+
 
         self.current_c_loss = []
         self.current_r_loss = []

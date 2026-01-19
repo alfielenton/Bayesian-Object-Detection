@@ -4,7 +4,7 @@ class Parameters:
     def __init__(self):
 
         self.device = 'cuda'
-        self.n_epochs = 20
+        self.n_epochs = 80
         self.batch_size = 32
         self.feat_dim = 512
         self.box_dim = 4
