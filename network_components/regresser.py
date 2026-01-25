@@ -17,14 +17,16 @@ class BayesRegresser:
 
     
     def parameters_step(self, batch):
-        X, Y = batch
 
-        XtX = X.T @ X           
-        YtX = Y.T @ X          
+        with torch.no_grad():
+            X, Y = batch
 
-        inv_Sig_wc = self.inv_Sig_wc
-        self.inv_Sig_wc = self.inv_Sig_wc + XtX
-        self.Mu_w = (self.Mu_w @ inv_Sig_wc + YtX) @ torch.linalg.inv(self.inv_Sig_wc)
+            XtX = X.T @ X           
+            YtX = Y.T @ X          
+
+            inv_Sig_wc = self.inv_Sig_wc
+            self.inv_Sig_wc = self.inv_Sig_wc + XtX
+            self.Mu_w = (self.Mu_w @ inv_Sig_wc + YtX) @ torch.linalg.inv(self.inv_Sig_wc)
 
     def predict_boxes(self, X):
 

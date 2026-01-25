@@ -34,8 +34,8 @@ print('Data loader and sampler created.\n')
 
 print('Getting models...')
 net = network.CNNhead().to(opt.device)
-net_optim = optim.Adam(net.parameters(), opt.lr_n, weight_decay = 1e-8)
-bc = classifier.BayesClassifier(opt.device, opt.feat_dim, opt.n_cats, opt.sig_Mu_c, opt.sig_Sig_c, opt.lr_c)
+net_optim = optim.Adam(net.parameters(), opt.lr_net, weight_decay = 1e-8)
+bc = classifier.BayesClassifier(opt.device, opt.feat_dim, opt.n_cats, opt.log_Uq, opt.log_Vq, opt.Up, opt.Vp, opt.alpha, opt.beta, opt.lr_c)
 br = regresser.BayesRegresser(opt.device, opt.feat_dim, opt.box_dim, opt.sig_W_r, opt.sig_y_r)
 print('Models obtained\n')
 
@@ -76,8 +76,8 @@ for epoch in range(n_epochs):
         net_optim.step()
 
         pt.record_losses(c_loss.detach(), r_loss.detach(), loss.detach())
-        with torch.no_grad():
-            bc.parameters_step((c_feat, y_c))
-            br.parameters_step((r_feat, y_r))
+
+        bc.parameters_step((c_feat.detach(), y_c.detach()))
+        br.parameters_step((r_feat.detach(), y_r.detach()))
 
     pt.end_epoch()
