@@ -45,7 +45,6 @@ pt.start_timer()
 print('Progress tracker obtained and timer started')
 
 print('Starting training...\n')
-net.train()
 n_epochs = opt.n_epochs
 
 for epoch in range(n_epochs):
@@ -56,28 +55,36 @@ for epoch in range(n_epochs):
         x_batch, y_c, y_r = data_handling_functions.generate_batch(ids)
         x_batch, y_c, y_r = x_batch.to(opt.device), y_c.to(opt.device), y_r.to(opt.device)
 
+        net.eval()
+        data_handling_functions.freeze(net)
+
+        with torch.no_grad():
+            c_feat, r_feat = net(x_batch)
+
+        bc.parameters_step((c_feat, y_c))
+        br.parameters_step((r_feat, y_r))
+
+        net.train()
+        data_handling_functions.unfreeze(net)
+
         c_feat, r_feat = net(x_batch)
 
-        c_preds = bc.predict_cats(c_feat)
-        r_preds_mu, r_preds_sig = br.predict_boxes(r_feat)
+        c_logp = bc.predict_cats(c_feat)
+        c_loss = -c_logp[torch.arange(y_c.size(0)), y_c].mean()
 
-        c_loss = -c_preds[torch.arange(y_c.size(0), device = opt.device), y_c].sum()
+        r_mu, r_sig = br.predict_boxes(r_feat)
+        var = torch.diagonal(r_sig, dim1=1, dim2=2)
 
-        var = torch.diagonal(r_preds_sig, dim1=1, dim2=2)
-        r_loss = .5 * torch.log(var).sum(dim=1) \
-                 +.5 * ((y_r - r_preds_mu) / var).sum(dim=1)
-        r_loss = r_loss.sum()
+        r_loss = (
+            0.5 * torch.log(var).sum(dim=1)
+            + 0.5 * ((y_r - r_mu) ** 2 / var).sum(dim=1)
+        ).mean()
 
+        loss = c_loss + r_loss
         net_optim.zero_grad()
-
-        loss = r_loss + c_loss
         loss.backward()
-
         net_optim.step()
 
         pt.record_losses(c_loss.detach(), r_loss.detach(), loss.detach())
-
-        bc.parameters_step((c_feat.detach(), y_c.detach()))
-        br.parameters_step((r_feat.detach(), y_r.detach()))
 
     pt.end_epoch()

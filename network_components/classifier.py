@@ -30,11 +30,12 @@ class BayesClassifier:
     def predict_cats(self, x):
 
         M = self.Mq
-        sig = torch.exp(self.log_epsq) / torch.exp(self.log_tauq - 1)
+        Sigma = (torch.exp(self.log_epsq) / torch.exp(self.log_tauq)) * (1 + torch.exp(self.log_Uq + self.log_Vq))
+        nu = 2 * torch.exp(self.log_tauq)
 
-        dist = ((x[..., None] - M)**2).sum(dim=1)
-        log_p = -.5 * self.N * torch.log(2 * torch.pi * sig ** 2) \
-                -.5 * dist / sig ** 2
+        log_p = torch.lgamma((nu + self.N) * .5) - torch.lgamma(.5 * nu) \
+                -.5 * self.N * torch.log(nu * torch.pi) -.5 * self.N * torch.log(Sigma) \
+                -.5 * (nu + self.N) * torch.log(1 + ((x[..., None] - M)**2).sum(dim=1) / (nu * Sigma))
         
         log_p = log_p - torch.logsumexp(log_p, dim=1, keepdim=True)
         return log_p

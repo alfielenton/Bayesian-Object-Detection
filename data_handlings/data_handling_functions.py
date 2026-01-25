@@ -88,3 +88,10 @@ def plot_bounding_box(id, resize = None):
     plt.title('Animal: ' + categ if resize is None else 'Animal: ' + categ +'. Resized')
     plt.show()
 
+def freeze(module):
+    for p in module.parameters():
+        p.requires_grad_(False)
+
+def unfreeze(module):
+    for p in module.parameters():
+        p.requires_grad_(True)

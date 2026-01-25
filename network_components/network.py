@@ -31,15 +31,13 @@ class CNNhead(nn.Module):
                                                      nn.ReLU(), 
                                                      nn.Linear(in_features = 2048, out_features = 1024),
                                                      nn.ReLU(),
-                                                     nn.Linear(in_features = 1024, out_features = 512), 
-                                                     nn.Tanh())
+                                                     nn.Linear(in_features = 1024, out_features = 512))
         
         self.ffn_regression_tail = nn.Sequential(nn.Linear(in_features = 12 * 12 * 64, out_features = 2048),
                                                      nn.ReLU(), 
                                                      nn.Linear(in_features = 2048, out_features = 1024),
                                                      nn.ReLU(),
-                                                     nn.Linear(in_features = 1024, out_features = 512), 
-                                                     nn.Sigmoid())
+                                                     nn.Linear(in_features = 1024, out_features = 512))
         
     def forward(self, im):
 
